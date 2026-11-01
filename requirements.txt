@@ -1,0 +1,16 @@
+fastapi>=0.115.0,<0.117
+uvicorn[standard]>=0.34.0,<0.36
+pydantic>=2.11.0,<3
+pydantic-settings>=2.9.0,<3
+httpx>=0.28.0,<0.29
+langchain==0.3.25
+langchain-core==0.3.58
+langchain-community==0.3.23
+langchain-ollama==0.3.2
+langgraph==0.4.8
+langgraph-checkpoint==2.1.1
+redis>=5.2.1,<6
+duckduckgo-search>=8.0.1,<9
+python-dotenv>=1.1.0,<2
+typer>=0.15.0,<0.17
+rich>=14.0.0,<15

@@ -1,0 +1,66 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  ollama-init:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b}
+    entrypoint: ["/bin/sh", "-c"]
+    command: "ollama pull $$OLLAMA_MODEL"
+    restart: "no"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  agent:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      OLLAMA_BASE_URL: http://ollama:11434
+      REDIS_URL: redis://redis:6379/0
+      AGENT_WORKSPACE: /app/workspace
+      AGENT_SKILLS_DIR: /app/skills
+      AGENT_ALLOW_SHELL: "true"
+    volumes:
+      - ./workspace:/app/workspace
+      - ./app:/app/app
+      - ./skills:/app/skills
+    depends_on:
+      ollama:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  redis_data:
